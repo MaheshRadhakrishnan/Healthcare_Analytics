@@ -1,0 +1,48 @@
+SELECT TOP 20 *
+FROM dbo.healthcare_dataset;
+
+SELECT COLUMN_NAME, DATA_TYPE
+FROM INFORMATION_SCHEMA.COLUMNS
+WHERE TABLE_NAME = 'healthcare_dataset';
+
+SELECT TOP 50
+    [Name],
+    [Age],
+    [Gender],
+    [Blood Type],
+    [Medical Condition],
+    [Date of Admission],
+    [Doctor],
+    [Hospital],
+
+    -- Check Insurance Provider cleaning
+    CASE 
+        WHEN [Insurance Provider] IS NULL OR [Insurance Provider] = '' THEN 'SELF PAY'
+        WHEN UPPER(LTRIM(RTRIM([Insurance Provider]))) IN ('AND', 'OR') THEN 'UNKNOWN'
+        ELSE [Insurance Provider]
+    END AS Cleaned_Insurance_Provider,
+
+    -- Check Billing Amount is numeric
+    CASE 
+        WHEN ISNUMERIC([Billing Amount]) = 1 THEN CAST([Billing Amount] AS DECIMAL(18,2))
+        ELSE NULL
+    END AS Cleaned_Billing_Amount,
+
+    -- Check Discharge Date is valid
+    CASE 
+        WHEN TRY_CAST([Discharge Date] AS DATE) IS NOT NULL THEN CAST([Discharge Date] AS DATE)
+        ELSE NULL
+    END AS Cleaned_Discharge_Date,
+
+    -- Check Medication column
+    CASE 
+        WHEN [Medication] IS NULL OR LTRIM(RTRIM([Medication])) = '' THEN 'UNKNOWN'
+        ELSE [Medication]
+    END AS Cleaned_Medication,
+
+    [Room Number],
+    [Admission Type],
+    [Test Results]
+
+FROM dbo.healthcare_dataset
+ORDER BY [Date of Admission] DESC;
